@@ -1,0 +1,52 @@
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: blog-api-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: blog_api
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-api-network
+
+  # Redis - 缓存和会话存储（可选，后续使用）
+  redis:
+    image: redis:7-alpine
+    container_name: blog-api-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-api-network
+
+volumes:
+  postgres_data:
+    name: blog-api-postgres-data
+  redis_data:
+    name: blog-api-redis-data
+
+networks:
+  blog-api-network:
+    name: blog-api-network
+    driver: bridge
+
